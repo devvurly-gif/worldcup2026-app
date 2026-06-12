@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/main.js'])
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6881478405262528" crossorigin="anonymous"></script>
 </head>
 <body class="bg-[#050518] text-white min-h-screen">
     <div id="app"></div>
