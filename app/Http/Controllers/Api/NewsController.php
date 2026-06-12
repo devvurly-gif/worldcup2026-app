@@ -3,121 +3,76 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\NewsArticle;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class NewsController extends Controller
 {
-    private const QUERIES = [
-        'all'     => 'FIFA World Cup 2026',
-        'maroc'   => 'Morocco World Cup 2026 Maroc',
-        'equipes' => 'World Cup 2026 teams soccer',
-        'scores'  => 'World Cup 2026 match results goals',
-    ];
+    private const CATEGORIES = ['all', 'maroc', 'equipes', 'scores', 'general'];
 
-    /** GET /api/news?cat=all&lang=fr */
+    /** GET /api/news?cat=all&lang=fr&page=1 */
     public function index(): JsonResponse
     {
-        $cat  = in_array(request('cat'), array_keys(self::QUERIES)) ? request('cat') : 'all';
-        $lang = request('lang', 'fr');
+        $cat    = request('cat', 'all');
+        $lang   = request('lang', 'fr');
+        $page   = max(1, (int) request('page', 1));
+        $limit  = 30;
+        $offset = ($page - 1) * $limit;
 
-        $cacheKey = "news_{$cat}_{$lang}";
+        $query = NewsArticle::orderByDesc('published_at');
 
-        $articles = Cache::remember($cacheKey, 1800, function () use ($cat, $lang) {
-            return $this->fetchNews(self::QUERIES[$cat], $lang);
-        });
+        if ($cat !== 'all' && in_array($cat, self::CATEGORIES)) {
+            $query->where('category', $cat);
+        }
+
+        // Show French + English articles (bilingual feed)
+        // $query->where('lang', $lang);
+
+        $total    = $query->count();
+        $articles = $query->skip($offset)->take($limit)->get();
 
         return response()->json([
             'category' => $cat,
-            'count'    => count($articles),
-            'articles' => $articles,
+            'count'    => $total,
+            'page'     => $page,
+            'articles' => $articles->map(fn($a) => $this->format($a)),
         ]);
     }
 
-    /** GET /api/news/:slug — single article by slug */
+    /** GET /api/news/{slug} */
     public function show(string $slug): JsonResponse
     {
-        // Search all categories for the slug
-        foreach (array_keys(self::QUERIES) as $cat) {
-            foreach (['fr', 'en'] as $lang) {
-                $cacheKey = "news_{$cat}_{$lang}";
-                $articles = Cache::get($cacheKey, []);
-                $article  = collect($articles)->first(fn($a) => $a['slug'] === $slug);
-                if ($article) {
-                    return response()->json($article);
-                }
-            }
+        $article = NewsArticle::where('slug', $slug)->first();
+
+        if (!$article) {
+            return response()->json(['error' => 'Article introuvable'], 404);
         }
-        return response()->json(['error' => 'Article introuvable'], 404);
+
+        $related = NewsArticle::where('category', $article->category)
+            ->where('id', '!=', $article->id)
+            ->orderByDesc('published_at')
+            ->take(4)
+            ->get();
+
+        return response()->json([
+            ...$this->format($article),
+            'content' => $article->description,
+            'related' => $related->map(fn($a) => $this->format($a)),
+        ]);
     }
 
-    private function fetchNews(string $query, string $lang): array
+    private function format(NewsArticle $a): array
     {
-        try {
-            $hl  = $lang === 'fr' ? 'fr' : 'en';
-            $gl  = $lang === 'fr' ? 'FR' : 'US';
-            $url = "https://news.google.com/rss/search?q=" . urlencode($query) . "&hl={$hl}&gl={$gl}&ceid={$gl}:{$hl}";
-
-            $response = Http::timeout(10)->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (compatible; WorldCup2026Bot/1.0)',
-            ])->get($url);
-
-            if (!$response->ok()) return [];
-
-            $xml      = simplexml_load_string($response->body());
-            $items    = $xml->channel->item ?? [];
-            $articles = [];
-
-            foreach ($items as $item) {
-                $title       = (string) $item->title;
-                $link        = (string) $item->link;
-                $pubDate     = (string) $item->pubDate;
-                $description = (string) $item->description;
-                $source      = (string) ($item->source ?? '');
-
-                // Extract image from description HTML
-                $image = $this->extractImage($description);
-
-                // Clean description text
-                $cleanDesc = strip_tags($description);
-                $cleanDesc = html_entity_decode($cleanDesc, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                $cleanDesc = trim(preg_replace('/\s+/', ' ', $cleanDesc));
-
-                // Source from title (Google News format: "Title - Source")
-                if (!$source && str_contains($title, ' - ')) {
-                    $parts  = explode(' - ', $title);
-                    $source = array_pop($parts);
-                    $title  = implode(' - ', $parts);
-                }
-
-                $slug = Str::slug(Str::limit($title, 80)) . '-' . substr(md5($link), 0, 6);
-
-                $articles[] = [
-                    'slug'        => $slug,
-                    'title'       => $title,
-                    'description' => Str::limit($cleanDesc, 200),
-                    'content'     => $cleanDesc,
-                    'image'       => $image ?: "https://source.unsplash.com/800x450/?soccer,worldcup&sig=" . crc32($link),
-                    'source'      => $source ?: 'Google News',
-                    'url'         => $link,
-                    'published_at'=> $pubDate ? date('Y-m-d\TH:i:s\Z', strtotime($pubDate)) : now()->toIsoString(),
-                    'category'    => 'Actualités',
-                ];
-            }
-
-            return array_slice($articles, 0, 30);
-        } catch (\Throwable $e) {
-            return [];
-        }
-    }
-
-    private function extractImage(string $html): ?string
-    {
-        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/', $html, $m)) {
-            return $m[1];
-        }
-        return null;
+        return [
+            'slug'         => $a->slug,
+            'title'        => $a->title,
+            'description'  => $a->description,
+            'image'        => $a->image ?: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80',
+            'source'       => $a->source,
+            'url'          => $a->url,
+            'category'     => $a->category,
+            'lang'         => $a->lang,
+            'published_at' => $a->published_at?->toIsoString(),
+        ];
     }
 }

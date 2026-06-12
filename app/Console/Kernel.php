@@ -12,7 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // AI News Agent — runs every 30 minutes
+        $schedule->command('news:fetch')
+                 ->everyThirtyMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/news-agent.log'));
     }
 
     /**
