@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
 
     <!-- ── CONTROLS ──────────────────────────────────────── -->
@@ -228,6 +228,8 @@
 </template>
 
 <script setup>
+import { useSeoMeta } from '@/composables/useSeoMeta'
+useSeoMeta({ title: 'Joueurs – 1245 Stars du Mondial 2026', description: '1245 joueurs qualifiés pour la Coupe du Monde FIFA 2026. Cherchez par équipe, poste ou nom.', path: '/joueurs' })
 import { ref, computed, watch, onMounted, defineComponent, h } from 'vue'
 import SortIcon from '@/components/SortIcon.vue'
 import { usePlayers, calcAge, posShort, posBg, posBgLight, TEAM_OPTIONS, POSITIONS } from '@/composables/usePlayers'
@@ -326,3 +328,4 @@ onMounted(loadApiClubs)
 .modal-enter-active, .modal-leave-active { transition: opacity .2s, transform .2s; }
 .modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(.95); }
 </style>
+

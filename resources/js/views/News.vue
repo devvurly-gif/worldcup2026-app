@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-8">
 
     <!-- ── PAGE TITLE ──────────────────────────────────────── -->
@@ -162,6 +162,8 @@
 </template>
 
 <script setup>
+import { useSeoMeta } from '@/composables/useSeoMeta'
+useSeoMeta({ title: 'Actualités Mondial 2026', description: 'Toutes les actualités de la Coupe du Monde FIFA 2026.', path: '/actualites' })
 import { ref, computed, onMounted } from 'vue'
 import NewsCarousel from '@/components/NewsCarousel.vue'
 import GoogleAd from '@/components/GoogleAd.vue'
@@ -235,3 +237,4 @@ onMounted(() => load())
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
+

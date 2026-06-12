@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-8">
 
     <!-- Hero Maroc -->
@@ -179,6 +179,8 @@
 </template>
 
 <script setup>
+import { useSeoMeta } from '@/composables/useSeoMeta'
+useSeoMeta({ title: 'Maroc au Mondial 2026 – Lions de l Atlas', description: 'Tout sur le Maroc à la Coupe du Monde FIFA 2026 : joueurs, calendrier et actualités.', path: '/maroc' })
 import { ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { api, getTeam } from '@/services/api'
@@ -233,3 +235,4 @@ function marResult(m) {
 
 onMounted(() => loadPlayers())
 </script>
+

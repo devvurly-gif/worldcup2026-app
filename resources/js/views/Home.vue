@@ -291,6 +291,13 @@ import MatchCard from '@/components/MatchCard.vue'
 import TeamLink from '@/components/TeamLink.vue'
 import NewsCarousel from '@/components/NewsCarousel.vue'
 import { flagImg } from '@/utils/flag'
+import { useSeoMeta } from '@/composables/useSeoMeta'
+
+useSeoMeta({
+  title: 'Scores, Groupes & Actualités – Coupe du Monde FIFA 2026',
+  description: 'Suivez la Coupe du Monde FIFA 2026 en direct : scores, classements des groupes, calendrier des 104 matchs, 48 équipes, joueurs et toutes les actualités.',
+  path: '/',
+})
 
 const store = useAppStore()
 

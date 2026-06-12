@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
       <h1 class="section-title mb-0">
@@ -90,6 +90,8 @@
 </template>
 
 <script setup>
+import { useSeoMeta } from '@/composables/useSeoMeta'
+useSeoMeta({ title: 'Calendrier – Tous les Matchs Mondial 2026', description: 'Calendrier complet des 104 matchs de la Coupe du Monde FIFA 2026.', path: '/calendrier' })
 import { ref, computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { getTeam } from '@/services/api'
@@ -125,3 +127,4 @@ function formatDay(d) {
   })
 }
 </script>
+

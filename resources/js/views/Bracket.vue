@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="space-y-8">
 
     <div class="flex items-center justify-between mb-2">
@@ -100,6 +100,8 @@
 </template>
 
 <script setup>
+import { useSeoMeta } from '@/composables/useSeoMeta'
+useSeoMeta({ title: 'Tableau de la Phase Finale – Mondial 2026', description: 'Tableau complet de la phase finale de la Coupe du Monde FIFA 2026.', path: '/bracket' })
 import { computed, defineComponent, h } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { getTeam } from '@/services/api'
@@ -214,3 +216,4 @@ function padArray(arr, len) {
   return res.slice(0, len)
 }
 </script>
+

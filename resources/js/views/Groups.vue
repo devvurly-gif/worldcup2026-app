@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <h1 class="section-title">
       <i class="fas fa-layer-group text-yellow-400"></i>
@@ -78,6 +78,8 @@ import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { getTeam, TEAMS } from '@/services/api'
 import { flagImg } from '@/utils/flag'
+import { useSeoMeta } from '@/composables/useSeoMeta'
+useSeoMeta({ title: 'Groupes – Classements Coupe du Monde 2026', description: 'Classements des 12 groupes de la Coupe du Monde FIFA 2026.', path: '/groupes' })
 
 const store = useAppStore()
 
@@ -89,3 +91,4 @@ function groupMatches(letter) {
   return store.fixtures.filter(m => m.group === letter)
 }
 </script>
+
