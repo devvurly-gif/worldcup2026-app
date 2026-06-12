@@ -175,7 +175,7 @@
              style="background:rgba(0,0,0,.75)" @click.self="selected=null">
           <div class="bg-[#1e293b] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
 
-            <div class="h-48 flex items-center justify-center relative overflow-hidden" :class="posBgLight(selected.position)">
+            <div class="h-96 flex items-center justify-center relative overflow-hidden" :class="posBgLight(selected.position)">
               <img v-if="selected.photo" :src="selected.photo" :alt="selected.name"
                    class="absolute inset-0 w-full h-full object-cover object-top" />
               <img v-else :src="flagImg(selected.code)" :alt="selected.code"
@@ -211,15 +211,9 @@
                 </div>
               </div>
 
-              <div class="flex gap-2 mt-4">
-                <a :href="`https://fr.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(selected.name)}`"
-                   target="_blank" rel="noopener"
-                   class="flex-1 py-2.5 rounded-xl text-sm font-bold text-center
-                          bg-brand hover:bg-brand-light text-black transition-colors">
-                  <i class="fab fa-wikipedia-w mr-1"></i> Wikipedia
-                </a>
+              <div class="mt-4">
                 <button @click="selected=null"
-                        class="flex-1 py-2.5 rounded-xl text-sm font-bold
+                        class="w-full py-2.5 rounded-xl text-sm font-bold
                                bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-colors">
                   Fermer
                 </button>
