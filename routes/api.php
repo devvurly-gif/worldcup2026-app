@@ -32,10 +32,11 @@ Route::prefix('wc26')->group(function () {
     Route::get('/fixtures',        [FixtureController::class, 'index']);
     Route::get('/standings',       [StandingController::class, 'index']);
     Route::get('/squad/{code}',    [SquadController::class, 'show']);
+    Route::get('/squads',          [SquadController::class, 'index']);
     Route::get('/weather',         [WeatherController::class, 'index']);
 
-    // Players CRUD (admin-password protected, same as before)
-    Route::get('/players',         [SquadController::class, 'allPlayers']);
+    // Players CRUD
+    Route::get('/players',         [SquadController::class, 'index']);
     Route::post('/players',        [SquadController::class, 'store']);
     Route::put('/players/{id}',    [SquadController::class, 'update']);
     Route::delete('/players/{id}', [SquadController::class, 'destroy']);

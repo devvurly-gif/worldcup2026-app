@@ -7,6 +7,18 @@
 import { ref, computed } from 'vue'
 import { PLAYERS_DATA } from '@/data/players'
 
+// Auto-generate player photo URL from team code + player name
+function buildPhotoUrl(code, name) {
+  if (!code || !name) return null
+  const slug = name
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // remove accents
+    .replace(/[^a-z0-9\s-]/g, '')                     // remove special chars
+    .trim()
+    .replace(/\s+/g, '-')                             // spaces → hyphens
+  return `/storage/players/${code.toLowerCase()}_${slug}.jpg`
+}
+
 // ── Mapping FR ↔ code FIFA ────────────────────────────────
 export const FR_TO_CODE = {
   'Mexique':'MEX','Afrique du Sud':'RSA','République de Corée':'KOR','Tchéquie':'CZE',
@@ -79,7 +91,7 @@ export function usePlayers() {
           club:       ov.club       ?? _apiClubs.value[key] ?? p.club       ?? null,
           birth_date: ov.birth_date ?? p.birth_date ?? null,
           number:     ov.number     ?? p.number     ?? null,
-          photo:      ov.photo      ?? p.photo      ?? null,
+          photo:      ov.photo      ?? p.photo      ?? buildPhotoUrl(FR_TO_CODE[p.team], p.name),
         }
       })
     return base
