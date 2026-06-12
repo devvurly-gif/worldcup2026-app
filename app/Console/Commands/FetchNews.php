@@ -95,7 +95,7 @@ class FetchNews extends Command
             }
 
             $articles[] = [
-                'title'        => $title,
+                'title'        => Str::limit($title, 250),
                 'url'          => $link,
                 'description'  => Str::limit($desc, 300),
                 'image'        => $image,
