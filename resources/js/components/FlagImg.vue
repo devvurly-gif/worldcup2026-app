@@ -1,5 +1,5 @@
 <template>
-  <img v-if="src" :src="src" :alt="code" :class="cls" loading="lazy" />
+  <img v-if="src" :src="src" :alt="code" :class="cls" loading="eager" decoding="async" />
   <span v-else :class="cls">🏳️</span>
 </template>
 

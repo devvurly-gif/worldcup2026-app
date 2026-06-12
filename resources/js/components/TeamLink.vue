@@ -4,7 +4,7 @@
               :class="cls">
     <img v-if="showFlag && flagSrc" :src="flagSrc" :alt="code"
          class="object-cover rounded-sm shrink-0 inline-block"
-         :class="flagImgCls" loading="lazy" />
+         :class="flagImgCls" loading="eager" />
     <span v-else-if="showFlag" class="shrink-0">🏳️</span>
     <span v-if="showName" class="truncate group-hover/tl:underline underline-offset-2">{{ displayName }}</span>
   </RouterLink>
