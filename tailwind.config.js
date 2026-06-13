@@ -19,5 +19,31 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [require('daisyui')],
+  daisyui: {
+    themes: [
+      {
+        wc2026: {
+          'primary':          '#f59e0b',
+          'primary-content':  '#000000',
+          'secondary':        '#1e3a5f',
+          'secondary-content':'#ffffff',
+          'accent':           '#ef4444',
+          'accent-content':   '#ffffff',
+          'neutral':          '#0a0f1e',
+          'neutral-content':  '#ffffff',
+          'base-100':         '#0d1b2a',
+          'base-200':         '#0a1520',
+          'base-300':         '#071018',
+          'base-content':     '#e2e8f0',
+          'info':             '#3b82f6',
+          'success':          '#22c55e',
+          'warning':          '#f59e0b',
+          'error':            '#ef4444',
+        },
+      },
+    ],
+    darkTheme: 'wc2026',
+    logs: false,
+  },
 }
