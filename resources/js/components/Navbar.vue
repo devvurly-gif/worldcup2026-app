@@ -1,79 +1,79 @@
 <template>
-  <header class="sticky top-0 z-50 hero-bg shadow-2xl">
-    <div class="max-w-7xl mx-auto px-4">
-      <!-- Top bar -->
-      <div class="flex items-center justify-between py-3 border-b border-white/10">
-        <!-- Logo -->
-        <RouterLink to="/" class="flex items-center gap-3 group">
-          <span class="text-3xl group-hover:scale-110 transition-transform">🏆</span>
-          <div>
-            <h1 class="text-lg font-black text-white leading-none">FIFA WORLD CUP</h1>
-            <span class="text-yellow-400 font-bold text-xs tracking-widest">2026 USA · CAN · MEX</span>
-          </div>
-        </RouterLink>
+  <div class="navbar sticky top-0 z-50 bg-base-200 shadow-lg border-b border-white/10 px-4 gap-2 flex-col md:flex-row min-h-0 py-0">
 
-        <!-- Compte à rebours -->
-        <div v-if="countdown.days >= 0" class="hidden md:flex items-center gap-3 glass rounded-xl px-4 py-2">
-          <template v-if="countdown.days > 0">
-            <div class="text-center">
-              <div class="text-2xl font-black text-yellow-400">{{ countdown.days }}</div>
-              <div class="text-[10px] text-gray-500 uppercase">jours</div>
-            </div>
-            <span class="text-yellow-400 font-bold">:</span>
-            <div class="text-center">
-              <div class="text-2xl font-black text-yellow-400">{{ pad(countdown.hours) }}</div>
-              <div class="text-[10px] text-gray-500 uppercase">heures</div>
-            </div>
-            <span class="text-yellow-400 font-bold">:</span>
-            <div class="text-center">
-              <div class="text-2xl font-black text-yellow-400">{{ pad(countdown.mins) }}</div>
-              <div class="text-[10px] text-gray-500 uppercase">min</div>
-            </div>
-          </template>
-          <template v-else>
-            <span class="w-2 h-2 bg-red-500 rounded-full animate-blink"></span>
-            <span class="text-yellow-400 font-bold text-sm">Tournoi en cours !</span>
-          </template>
-        </div>
+    <!-- Top row -->
+    <div class="w-full flex items-center justify-between py-2.5 border-b border-white/10">
 
-        <!-- Status + Quota -->
-        <div class="flex items-center gap-2">
-          <div class="hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-               :class="statusClass">
-            <span class="w-1.5 h-1.5 rounded-full"
-                  :class="store.status.type === 'live' ? 'bg-red-400 animate-blink' :
-                          store.status.type === 'ok'   ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'">
-            </span>
-            <span class="font-medium max-w-[160px] truncate">{{ store.status.msg || 'En attente…' }}</span>
-          </div>
-          <button @click="store.forceRefresh()"
-                  class="btn-ghost text-xs px-2.5 py-1.5">
-            <i class="fas fa-rotate-right" :class="store.status.type==='loading' ? 'animate-spin' : ''"></i>
-          </button>
-          <!-- Live badge -->
-          <span v-if="store.liveCount > 0"
-                class="badge-live animate-pulse">
-            🔴 {{ store.liveCount }} LIVE
-          </span>
+      <!-- Logo -->
+      <RouterLink to="/" class="flex items-center gap-3 group shrink-0">
+        <span class="text-3xl group-hover:scale-110 transition-transform">🏆</span>
+        <div class="leading-tight">
+          <div class="text-base font-black text-base-content">FIFA WORLD CUP</div>
+          <div class="text-xs font-bold text-primary tracking-widest">2026 USA · CAN · MEX</div>
         </div>
+      </RouterLink>
+
+      <!-- Countdown -->
+      <div v-if="countdown.days >= 0" class="hidden md:flex items-center gap-1">
+        <template v-if="countdown.days > 0">
+          <div class="flex flex-col items-center bg-base-300 rounded-lg px-3 py-1.5">
+            <span class="text-xl font-black text-primary">{{ countdown.days }}</span>
+            <span class="text-[10px] text-base-content/40 uppercase">j</span>
+          </div>
+          <span class="text-primary font-black text-lg">:</span>
+          <div class="flex flex-col items-center bg-base-300 rounded-lg px-3 py-1.5">
+            <span class="text-xl font-black text-primary">{{ pad(countdown.hours) }}</span>
+            <span class="text-[10px] text-base-content/40 uppercase">h</span>
+          </div>
+          <span class="text-primary font-black text-lg">:</span>
+          <div class="flex flex-col items-center bg-base-300 rounded-lg px-3 py-1.5">
+            <span class="text-xl font-black text-primary">{{ pad(countdown.mins) }}</span>
+            <span class="text-[10px] text-base-content/40 uppercase">m</span>
+          </div>
+        </template>
+        <template v-else>
+          <div class="badge badge-error gap-1.5 animate-pulse font-bold">
+            <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+            Tournoi en cours !
+          </div>
+        </template>
       </div>
 
-      <!-- Navigation -->
-      <nav class="flex gap-0 overflow-x-auto">
+      <!-- Status + actions -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="hidden sm:flex badge gap-1.5 font-medium" :class="statusBadgeClass">
+          <span class="w-1.5 h-1.5 rounded-full"
+                :class="store.status.type === 'live'    ? 'bg-error animate-ping' :
+                        store.status.type === 'ok'      ? 'bg-success' :
+                        'bg-warning animate-pulse'"></span>
+          <span class="max-w-[140px] truncate text-xs">{{ store.status.msg || 'En attente…' }}</span>
+        </div>
+        <button @click="store.forceRefresh()" class="btn btn-ghost btn-xs btn-square">
+          <i class="fas fa-rotate-right text-xs" :class="store.status.type==='loading' ? 'animate-spin' : ''"></i>
+        </button>
+        <div v-if="store.liveCount > 0" class="badge badge-error gap-1 animate-pulse font-black">
+          🔴 {{ store.liveCount }} LIVE
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav tabs -->
+    <div class="w-full overflow-x-auto">
+      <nav class="flex gap-0 min-w-max">
         <RouterLink v-for="item in navItems" :key="item.to"
                     :to="item.to"
-                    class="flex items-center gap-2 px-4 py-3 text-sm font-semibold whitespace-nowrap
-                           transition-colors border-b-2 border-transparent text-gray-400
-                           hover:text-white hover:border-yellow-400/50"
-                    active-class="!text-yellow-400 !border-yellow-400">
-          <i :class="item.icon" class="text-xs"></i>
+                    class="flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold whitespace-nowrap
+                           transition-colors border-b-2 border-transparent text-base-content/40
+                           hover:text-base-content hover:border-primary/50"
+                    active-class="!text-primary !border-primary">
+          <i :class="item.icon" class="text-[11px]"></i>
           {{ item.label }}
-          <img v-if="item.to==='/maroc'" src="https://flagcdn.com/w40/ma.png" alt="MA"
+          <img v-if="item.flag" :src="item.flag" :alt="item.label"
                class="w-5 h-3.5 object-cover rounded-sm" />
         </RouterLink>
       </nav>
     </div>
-  </header>
+  </div>
 </template>
 
 <script setup>
@@ -83,32 +83,32 @@ import { useAppStore } from '@/stores/app'
 const store = useAppStore()
 
 const navItems = [
-  { to:'/',            label:'Accueil',     icon:'fas fa-home' },
-  { to:'/groupes',     label:'Groupes',     icon:'fas fa-layer-group' },
-  { to:'/calendrier',  label:'Calendrier',  icon:'fas fa-calendar' },
-  { to:'/joueurs',     label:'Joueurs',     icon:'fas fa-users' },
-  { to:'/actualites',  label:'Actualités',  icon:'fas fa-newspaper' },
-  { to:'/maroc',       label:'Focus Maroc', icon:'fas fa-star' },
-  { to:'/bracket',     label:'Bracket',     icon:'fas fa-trophy' },
+  { to:'/',           label:'Accueil',     icon:'fas fa-home' },
+  { to:'/groupes',    label:'Groupes',     icon:'fas fa-layer-group' },
+  { to:'/calendrier', label:'Calendrier',  icon:'fas fa-calendar' },
+  { to:'/joueurs',    label:'Joueurs',     icon:'fas fa-users' },
+  { to:'/actualites', label:'Actualités',  icon:'fas fa-newspaper' },
+  { to:'/maroc',      label:'Maroc',       icon:'fas fa-star', flag:'https://flagcdn.com/w40/ma.png' },
+  { to:'/bracket',    label:'Bracket',     icon:'fas fa-trophy' },
 ]
 
-const statusClass = computed(() => ({
-  'bg-green-500/10 border border-green-500/20 text-green-400': store.status.type === 'ok',
-  'bg-red-500/10 border border-red-500/20 text-red-400': store.status.type === 'live',
-  'bg-yellow-500/10 border border-yellow-500/20 text-yellow-400': store.status.type === 'loading' || store.status.type === 'error',
-  'glass text-gray-400': store.status.type === 'idle',
+const statusBadgeClass = computed(() => ({
+  'badge-success badge-outline': store.status.type === 'ok',
+  'badge-error badge-outline':   store.status.type === 'live',
+  'badge-warning badge-outline': store.status.type === 'loading' || store.status.type === 'error',
+  'badge-ghost':                 store.status.type === 'idle',
 }))
 
-// Countdown
 const countdown = ref({ days: 0, hours: 0, mins: 0 })
 function pad(n) { return String(n).padStart(2,'0') }
 function updateCd() {
   const diff = new Date('2026-06-11T20:00:00-05:00') - Date.now()
   if (diff <= 0) { countdown.value = { days: -1, hours: 0, mins: 0 }; return }
-  const d = Math.floor(diff / 86400000)
-  const h = Math.floor((diff % 86400000) / 3600000)
-  const m = Math.floor((diff % 3600000) / 60000)
-  countdown.value = { days: d, hours: h, mins: m }
+  countdown.value = {
+    days:  Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    mins:  Math.floor((diff % 3600000) / 60000),
+  }
 }
 let cdTimer
 onMounted(() => { updateCd(); cdTimer = setInterval(updateCd, 30000) })
