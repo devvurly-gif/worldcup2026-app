@@ -150,14 +150,13 @@
 
     <!-- Onglets -->
     <div class="flex gap-2 border-b border-white/10">
-      <button v-for="tab in tabs" :key="tab"
-              @click="activeTab = tab"
+      <button @click="activeTab = 'Événements'"
               class="px-4 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px"
-              :class="activeTab === tab
+              :class="activeTab === 'Événements'
                 ? 'text-yellow-400 border-yellow-400'
                 : 'text-gray-500 border-transparent hover:text-gray-300'">
-        {{ tab }}
-        <span v-if="tab === 'Événements' && events.length"
+        Événements
+        <span v-if="events.length"
               class="ml-1.5 text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded-full">
           {{ events.length }}
         </span>
@@ -186,69 +185,6 @@
       </div>
     </div>
 
-    <!-- Statistiques -->
-    <div v-if="activeTab === 'Statistiques'">
-      <div v-if="stats.length" class="space-y-3">
-        <div v-for="s in stats[0]?.statistics ?? []" :key="s.type" class="card p-4">
-          <div class="flex items-center justify-between mb-2 text-xs font-bold text-gray-400 uppercase">
-            <span>{{ stats[0]?.team?.name }}</span>
-            <span class="text-gray-600">{{ s.type }}</span>
-            <span>{{ stats[1]?.statistics?.find(x=>x.type===s.type)?.value ?? '—' }}</span>
-          </div>
-          <div class="flex gap-2 items-center">
-            <span class="text-sm font-black text-yellow-400 w-8">{{ s.value ?? 0 }}</span>
-            <div class="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
-              <div class="h-full bg-yellow-400 rounded-full transition-all duration-500"
-                   :style="`width:${pct(s.value)}%`"></div>
-            </div>
-            <div class="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden rotate-180">
-              <div class="h-full bg-blue-400 rounded-full transition-all duration-500"
-                   :style="`width:${pct(stats[1]?.statistics?.find(x=>x.type===s.type)?.value)}%`"></div>
-            </div>
-            <span class="text-sm font-black text-blue-400 w-8 text-right">
-              {{ stats[1]?.statistics?.find(x=>x.type===s.type)?.value ?? 0 }}
-            </span>
-          </div>
-        </div>
-      </div>
-      <div v-else class="card p-8 text-center text-gray-600">
-        <i class="fas fa-chart-bar text-3xl mb-3 block opacity-30"></i>
-        <p>Statistiques disponibles après le coup d'envoi</p>
-      </div>
-    </div>
-
-    <!-- Compositions -->
-    <div v-if="activeTab === 'Compositions'">
-      <div v-if="lineups.length" class="grid md:grid-cols-2 gap-6">
-        <div v-for="l in lineups" :key="l.team" class="card p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-black text-white">{{ l.team }}</h3>
-            <span class="text-yellow-400 font-bold text-sm">{{ l.formation }}</span>
-          </div>
-          <div class="space-y-1">
-            <div v-for="p in l.startXI" :key="p.number"
-                 class="flex items-center gap-3 py-1.5 border-b border-white/5">
-              <span class="text-xs font-black text-gray-600 w-6">{{ p.number }}</span>
-              <span class="text-sm text-white font-medium">{{ p.name }}</span>
-              <span class="ml-auto text-xs text-gray-600">{{ p.pos }}</span>
-            </div>
-          </div>
-          <div class="mt-3 pt-3 border-t border-white/10">
-            <p class="text-xs text-gray-600 uppercase mb-2">Remplaçants</p>
-            <div class="flex flex-wrap gap-1">
-              <span v-for="p in l.substitutes" :key="p.number"
-                    class="text-xs glass px-2 py-0.5 rounded-full text-gray-400">
-                {{ p.number }}. {{ p.name }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-else class="card p-8 text-center text-gray-600">
-        <i class="fas fa-shirt text-3xl mb-3 block opacity-30"></i>
-        <p>Compositions non disponibles</p>
-      </div>
-    </div>
 
   </div>
 
@@ -272,14 +208,11 @@ import { flagImg } from '@/utils/flag'
 const route = useRoute()
 const store = useAppStore()
 
-const match     = ref(null)
-const events    = ref([])
-const stats     = ref([])
-const lineups   = ref([])
-const weather   = ref(null)
-const loading   = ref(true)
+const match   = ref(null)
+const events  = ref([])
+const weather = ref(null)
+const loading = ref(true)
 const activeTab = ref('Événements')
-const tabs      = ['Événements', 'Statistiques', 'Compositions']
 
 // Live chrono
 const displayElapsed    = ref(0)
@@ -316,9 +249,7 @@ async function load(id, silent = false) {
         scoreHome: d.score?.home,
         scoreAway: d.score?.away,
       }
-      events.value  = d.events  ?? []
-      stats.value   = d.stats   ?? []
-      lineups.value = d.lineups ?? []
+      events.value = d.events ?? []
 
       // Init live chrono
       if (d.is_live && d.elapsed) {
