@@ -30,6 +30,8 @@ Route::prefix('wc26')->group(function () {
     Route::get('/teams',           [TeamController::class, 'index']);
     Route::get('/teams/{code}',    [TeamController::class, 'show']);
     Route::get('/fixtures',        [FixtureController::class, 'index']);
+    Route::get('/fixtures/live',   [FixtureController::class, 'live']);
+    Route::get('/fixtures/{id}',   [FixtureController::class, 'show']);
     Route::get('/standings',       [StandingController::class, 'index']);
     Route::get('/squad/{code}',    [SquadController::class, 'show']);
     Route::get('/squads',          [SquadController::class, 'index']);
