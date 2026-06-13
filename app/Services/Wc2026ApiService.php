@@ -180,31 +180,36 @@ class Wc2026ApiService
         $events = [];
 
         foreach ([
-            'home' => ['home_scorers', $g['home_team_name_en'] ?? ''],
-            'away' => ['away_scorers', $g['away_team_name_en'] ?? ''],
-        ] as $side => [$field, $teamName]) {
-            $raw = $g[$field] ?? null;
+            'home' => [$g['home_scorers'] ?? null, $g['home_team_name_en'] ?? ''],
+            'away' => [$g['away_scorers'] ?? null, $g['away_team_name_en'] ?? ''],
+        ] as $side => [$raw, $teamName]) {
             if (!$raw || $raw === 'null') continue;
 
-            // Strip curly braces and parse entries
-            $cleaned = trim((string) $raw, '{}');
-            if (empty($cleaned)) continue;
+            $str = (string) $raw;
 
-            // Split by '","' pattern
-            $parts = preg_split('/",\s*"/', $cleaned);
+            // Normalize curly/smart quotes → plain ASCII quotes
+            $str = str_replace(["\u{201C}", "\u{201D}", "\u{2018}", "\u{2019}", "\xE2\x80\x9C", "\xE2\x80\x9D"], '"', $str);
+
+            // Strip outer { } braces
+            $str = trim($str, '{}');
+            if (empty($str)) continue;
+
+            // Split entries: separated by "," or just comma between quoted tokens
+            $parts = preg_split('/"?\s*,\s*"?/', $str);
 
             foreach ($parts as $part) {
-                $part = trim($part, '"\'');
+                // Strip any remaining quotes/whitespace
+                $part = trim($part, " \t\n\r\0\x0B\"'");
                 if (empty($part)) continue;
 
-                // Extract minute: "Player Name 67'" or "Player Name (pen) 45+2'"
-                if (preg_match('/^(.+?)\s+(\d+(?:\+\d+)?)\s*\'?\s*(\(.*?\))?\s*$/', $part, $m)) {
-                    $player  = trim($m[1]);
-                    $minute  = $m[2];
-                    $detail  = isset($m[3]) && $m[3] ? trim($m[3], '()') : 'Normal Goal';
+                // Match "Player Name 67'" or "Player Name (pen) 45+2'"
+                if (preg_match('/^(.+?)\s+(\d+(?:\+\d+)?)\s*\'?\s*(?:\(([^)]+)\))?\s*$/', $part, $m)) {
+                    $player = trim($m[1]);
+                    $minute = $m[2];
+                    $annot  = isset($m[3]) ? strtolower(trim($m[3])) : '';
 
-                    $isOg   = stripos($detail, 'og') !== false || stripos($player, 'og') !== false;
-                    $isPen  = stripos($detail, 'pen') !== false || stripos($detail, 'penalty') !== false;
+                    $isOg  = str_contains($annot, 'og') || str_contains(strtolower($player), ' og');
+                    $isPen = str_contains($annot, 'pen');
 
                     $events[] = [
                         'minute' => $minute,
@@ -214,21 +219,10 @@ class Wc2026ApiService
                         'team'   => $teamName,
                         'side'   => $side,
                     ];
-                } else {
-                    // Fallback: use full string as player name
-                    $events[] = [
-                        'minute' => '?',
-                        'type'   => 'Goal',
-                        'detail' => 'Normal Goal',
-                        'player' => $part,
-                        'team'   => $teamName,
-                        'side'   => $side,
-                    ];
                 }
             }
         }
 
-        // Sort by minute
         usort($events, fn($a, $b) => (int) $a['minute'] - (int) $b['minute']);
 
         return $events;
