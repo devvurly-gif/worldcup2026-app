@@ -35,23 +35,15 @@ class FixtureController extends Controller
         ]);
     }
 
-    // GET /api/wc26/fixtures/{id} — détail d'un match
+    // GET /api/wc26/fixtures/{id} — détail d'un match avec events
     public function show(int $id): JsonResponse
     {
-        $all = $this->api->getAllFixtures();
-        $match = collect($all)->firstWhere('id', $id);
+        $detail = $this->api->getMatchDetail($id);
 
-        if (!$match) {
+        if (!$detail) {
             return response()->json(['error' => 'Match introuvable'], 404);
         }
 
-        return response()->json([
-            'data' => [
-                ...$match,
-                'events'   => [],
-                'lineups'  => [],
-                'stats'    => [],
-            ],
-        ]);
+        return response()->json(['data' => $detail]);
     }
 }

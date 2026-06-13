@@ -147,6 +147,93 @@ class Wc2026ApiService
         return $map;
     }
 
+    // ──────────────────────────────────────────────────────────
+    //  Détail d'un match (avec events parsés)
+    // ──────────────────────────────────────────────────────────
+    public function getMatchDetail(int $id): ?array
+    {
+        $raw      = $this->get('games', 30);
+        $stadiums = $this->getStadiumsMap();
+        $games    = $raw['games'] ?? [];
+
+        $raw_game = collect($games)->firstWhere('id', (string) $id)
+                 ?? collect($games)->firstWhere('id', $id);
+
+        if (!$raw_game) return null;
+
+        $base   = $this->formatGame($raw_game, $stadiums);
+        $events = $this->parseEvents($raw_game);
+
+        return array_merge($base, [
+            'events'  => $events,
+            'stats'   => [],
+            'lineups' => [],
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    //  Parse home_scorers / away_scorers → events array
+    //  Format: {"Player 9'","Player2 67'"} or null
+    // ──────────────────────────────────────────────────────────
+    private function parseEvents(array $g): array
+    {
+        $events = [];
+
+        foreach ([
+            'home' => ['home_scorers', $g['home_team_name_en'] ?? ''],
+            'away' => ['away_scorers', $g['away_team_name_en'] ?? ''],
+        ] as $side => [$field, $teamName]) {
+            $raw = $g[$field] ?? null;
+            if (!$raw || $raw === 'null') continue;
+
+            // Strip curly braces and parse entries
+            $cleaned = trim((string) $raw, '{}');
+            if (empty($cleaned)) continue;
+
+            // Split by '","' pattern
+            $parts = preg_split('/",\s*"/', $cleaned);
+
+            foreach ($parts as $part) {
+                $part = trim($part, '"\'');
+                if (empty($part)) continue;
+
+                // Extract minute: "Player Name 67'" or "Player Name (pen) 45+2'"
+                if (preg_match('/^(.+?)\s+(\d+(?:\+\d+)?)\s*\'?\s*(\(.*?\))?\s*$/', $part, $m)) {
+                    $player  = trim($m[1]);
+                    $minute  = $m[2];
+                    $detail  = isset($m[3]) && $m[3] ? trim($m[3], '()') : 'Normal Goal';
+
+                    $isOg   = stripos($detail, 'og') !== false || stripos($player, 'og') !== false;
+                    $isPen  = stripos($detail, 'pen') !== false || stripos($detail, 'penalty') !== false;
+
+                    $events[] = [
+                        'minute' => $minute,
+                        'type'   => 'Goal',
+                        'detail' => $isOg ? 'Own Goal' : ($isPen ? 'Penalty' : 'Normal Goal'),
+                        'player' => $player,
+                        'team'   => $teamName,
+                        'side'   => $side,
+                    ];
+                } else {
+                    // Fallback: use full string as player name
+                    $events[] = [
+                        'minute' => '?',
+                        'type'   => 'Goal',
+                        'detail' => 'Normal Goal',
+                        'player' => $part,
+                        'team'   => $teamName,
+                        'side'   => $side,
+                    ];
+                }
+            }
+        }
+
+        // Sort by minute
+        usort($events, fn($a, $b) => (int) $a['minute'] - (int) $b['minute']);
+
+        return $events;
+    }
+
     private function formatGame(array $g, array $stadiums): array
     {
         $finished    = strtoupper($g['finished'] ?? 'FALSE') !== 'FALSE';
@@ -156,17 +243,22 @@ class Wc2026ApiService
         $phase       = self::PHASE_MAP[$type] ?? 'Groupes';
         $group       = ($type === 'group') ? ($g['group'] ?? null) : null;
 
-        // Heure locale depuis local_date (format MM/DD/YYYY HH:mm)
-        $dateRaw  = $g['local_date'] ?? '';
+        $dateRaw    = $g['local_date'] ?? '';
         $dateParsed = date_create_from_format('m/d/Y H:i', $dateRaw);
-        $date     = $dateParsed ? $dateParsed->format('Y-m-d') : null;
-        $time     = $dateParsed ? $dateParsed->format('H:i')   : null;
+        $date       = $dateParsed ? $dateParsed->format('Y-m-d') : null;
+        $time       = $dateParsed ? $dateParsed->format('H:i')   : null;
 
         $stadium  = $stadiums[$g['stadium_id']] ?? [];
 
-        // Scores : '0' quand pas commencé — on retourne null dans ce cas
         $homeScore = $finished || $isLive ? (int) $g['home_score'] : null;
         $awayScore = $finished || $isLive ? (int) $g['away_score'] : null;
+
+        // Status détaillé
+        $status = 'NS';
+        if ($finished) $status = 'FT';
+        elseif ($isLive) {
+            $status = is_numeric($elapsed) && (int)$elapsed > 45 ? '2H' : '1H';
+        }
 
         $roundLabel = match($type) {
             'r32'   => 'Round of 32',
@@ -187,7 +279,7 @@ class Wc2026ApiService
             'phase'   => $phase,
             'group'   => $group,
             'round'   => $roundLabel,
-            'status'  => $finished ? 'FT' : ($isLive ? '1H' : 'NS'),
+            'status'  => $status,
             'elapsed' => is_numeric($elapsed) ? (int) $elapsed : null,
             'is_live' => $isLive,
             'is_third_place' => $type === 'third',
