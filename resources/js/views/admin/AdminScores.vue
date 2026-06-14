@@ -28,6 +28,7 @@
             <th class="px-4 py-3 text-left">Extérieur</th>
             <th class="px-4 py-3 text-left">Groupe</th>
             <th class="px-4 py-3 text-left">Stade</th>
+            <th class="px-4 py-3 text-center">Stream</th>
             <th class="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -56,9 +57,16 @@
               </span>
             </td>
             <td class="px-4 py-3 text-gray-500 text-xs truncate max-w-28">{{ m.venue }}</td>
+            <td class="px-4 py-3 text-center">
+              <span v-if="getStream(m.id)"
+                    class="inline-flex items-center gap-1 text-xs text-green-400 font-bold">
+                <i class="fas fa-circle text-[8px] animate-pulse"></i> Actif
+              </span>
+              <span v-else class="text-xs text-gray-700">—</span>
+            </td>
             <td class="px-4 py-3 text-right">
               <button @click="openModal(m)" class="btn-admin-ghost text-xs">
-                <i class="fas fa-pen mr-1"></i>Score
+                <i class="fas fa-pen mr-1"></i>Éditer
               </button>
             </td>
           </tr>
@@ -84,20 +92,26 @@
       <div v-if="modal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
            style="background:rgba(0,0,0,.7)" @click.self="modal=false">
         <div class="bg-[#0d0d2b] border border-white/10 rounded-2xl p-6 w-full max-w-sm">
-          <h2 class="text-white font-bold mb-5 text-center">Modifier le score</h2>
-          <div class="flex items-center gap-3 mb-6">
+          <h2 class="text-white font-bold mb-5 text-center">
+            {{ form.home }} vs {{ form.away }}
+          </h2>
+
+          <!-- Score -->
+          <div class="flex items-center gap-3 mb-4">
             <div class="flex-1 text-center">
-              <p class="text-white font-bold mb-2">{{ form.home }}</p>
+              <p class="text-gray-400 text-xs mb-1">{{ form.home }}</p>
               <input v-model.number="form.homeScore" type="number" min="0"
                      class="input-admin w-full text-center text-2xl font-black" />
             </div>
             <span class="text-gray-500 font-black text-xl">–</span>
             <div class="flex-1 text-center">
-              <p class="text-white font-bold mb-2">{{ form.away }}</p>
+              <p class="text-gray-400 text-xs mb-1">{{ form.away }}</p>
               <input v-model.number="form.awayScore" type="number" min="0"
                      class="input-admin w-full text-center text-2xl font-black" />
             </div>
           </div>
+
+          <!-- Statut -->
           <div class="mb-4">
             <label class="label-admin">Statut</label>
             <select v-model="form.status" class="input-admin w-full">
@@ -106,6 +120,27 @@
               <option value="finished">Terminé</option>
             </select>
           </div>
+
+          <!-- Stream URL -->
+          <div class="mb-5">
+            <label class="label-admin flex items-center gap-2">
+              <i class="fas fa-video text-red-400"></i>
+              URL Stream Live
+              <span class="text-gray-600 font-normal">(optionnel)</span>
+            </label>
+            <input v-model="form.streamUrl" type="url"
+                   placeholder="https://... (.m3u8, .mp4, iframe src...)"
+                   class="input-admin w-full font-mono text-xs" />
+            <p class="text-gray-600 text-xs mt-1">
+              Supporte HLS (.m3u8), MP4, et tout flux vidéo direct.
+            </p>
+            <button v-if="form.streamUrl"
+                    @click="form.streamUrl = ''"
+                    class="text-xs text-red-400 hover:text-red-300 mt-1">
+              <i class="fas fa-trash mr-1"></i>Supprimer le stream
+            </button>
+          </div>
+
           <div class="flex gap-3">
             <button @click="saveScore" class="btn-admin-primary flex-1">
               <i class="fas fa-check mr-2"></i>Enregistrer
@@ -151,12 +186,17 @@ const totalPages = computed(() => Math.ceil(filtered.value.length / PAGE_SIZE) |
 const paginated  = computed(() => filtered.value.slice((page.value-1)*PAGE_SIZE, page.value*PAGE_SIZE))
 watch([search, statusFilter], () => page.value = 1)
 
+function getStream(id) {
+  return localStorage.getItem(`stream_${id}`) || ''
+}
+
 function openModal(m) {
   form.value = {
     ...m,
     homeScore: m.homeScore ?? 0,
     awayScore: m.awayScore ?? 0,
     status: m.homeScore != null ? 'finished' : 'upcoming',
+    streamUrl: getStream(m.id),
   }
   modal.value = true
 }
@@ -166,8 +206,13 @@ function saveScore() {
   if (idx >= 0) {
     fixtures.value[idx] = { ...form.value }
   }
+  // Persist stream URL in localStorage
+  if (form.value.streamUrl) {
+    localStorage.setItem(`stream_${form.value.id}`, form.value.streamUrl)
+  } else {
+    localStorage.removeItem(`stream_${form.value.id}`)
+  }
   modal.value = false
-  // TODO: persist via API
 }
 
 async function loadFixtures() {
