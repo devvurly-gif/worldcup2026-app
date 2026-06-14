@@ -52,6 +52,10 @@
           <button @click="store.forceRefresh()" class="btn btn-ghost btn-xs btn-square">
             <i class="fas fa-rotate-right text-xs" :class="store.status.type==='loading' ? 'animate-spin' : ''"></i>
           </button>
+          <!-- Theme toggle -->
+          <button @click="toggleTheme" class="btn btn-ghost btn-xs btn-square" :title="isDark ? 'Mode clair' : 'Mode sombre'">
+            <i class="fas text-xs" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+          </button>
           <div v-if="store.liveCount > 0" class="badge badge-error gap-1 animate-pulse font-black text-xs">
             🔴 {{ store.liveCount }} LIVE
           </div>
@@ -82,6 +86,19 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 
 const store = useAppStore()
+
+const isDark = ref(localStorage.getItem('theme') !== 'light')
+
+function applyTheme(dark) {
+  const theme = dark ? 'wc2026' : 'wc2026-light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', dark ? 'dark' : 'light')
+}
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+  applyTheme(isDark.value)
+}
 
 const navItems = [
   { to:'/',           label:'Accueil',     icon:'fas fa-home' },

@@ -23,6 +23,26 @@ export default {
   daisyui: {
     themes: [
       {
+        'wc2026-light': {
+          'primary':          '#f97316',
+          'primary-content':  '#ffffff',
+          'secondary':        '#1e3a5f',
+          'secondary-content':'#ffffff',
+          'accent':           '#ea6b00',
+          'accent-content':   '#ffffff',
+          'neutral':          '#e2e8f0',
+          'neutral-content':  '#1e293b',
+          'base-100':         '#f8fafc',
+          'base-200':         '#f1f5f9',
+          'base-300':         '#e2e8f0',
+          'base-content':     '#0f172a',
+          'info':             '#3b82f6',
+          'success':          '#22c55e',
+          'warning':          '#f97316',
+          'error':            '#ef4444',
+        },
+      },
+      {
         wc2026: {
           'primary':          '#f97316',
           'primary-content':  '#ffffff',

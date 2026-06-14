@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr" prefix="og: https://ogp.me/ns#" data-theme="wc2026">
+<script>
+  (function(){
+    var t = localStorage.getItem('theme');
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'wc2026-light' : 'wc2026');
+  })();
+</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,7 +116,7 @@
     @vite(['resources/css/app.css', 'resources/js/main.js'])
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6881478405262528" crossorigin="anonymous"></script>
 </head>
-<body class="bg-[#050518] text-white min-h-screen">
+<body class="min-h-screen">
     <div id="app"></div>
 </body>
 </html>
