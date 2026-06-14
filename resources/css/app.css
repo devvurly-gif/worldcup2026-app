@@ -4,9 +4,10 @@
 
 @layer base {
   * { font-family: 'Inter', sans-serif; }
+  body { background-color: oklch(var(--b1)); color: oklch(var(--bc)); }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #0f172a; }
-  ::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 3px; }
+  ::-webkit-scrollbar-track { background: oklch(var(--b2)); }
+  ::-webkit-scrollbar-thumb { background: oklch(var(--p)); border-radius: 3px; }
 }
 
 @layer components {

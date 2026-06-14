@@ -14,6 +14,8 @@
     <LivePlayer v-if="match.isLive || streamUrl"
                 :stream-url="streamUrl"
                 :is-admin="isAdmin"
+                :fixture-id="match.id"
+                @stream-saved="streamUrl = $event"
                 ref="playerRef" />
 
     <!-- Header match -->
