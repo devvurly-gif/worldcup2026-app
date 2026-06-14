@@ -30,18 +30,31 @@ class Wc2026ApiService
     // ──────────────────────────────────────────────────────────
     private function get(string $endpoint, int $ttl = 300): array
     {
-        $cacheKey = 'wc26api_' . $endpoint;
+        $cacheKey      = 'wc26api_' . $endpoint;
+        $staleCacheKey = 'wc26api_stale_' . $endpoint;
 
-        return Cache::remember($cacheKey, $ttl, function () use ($endpoint) {
+        // Return fresh cache if available
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey, []);
+        }
+
+        try {
             $res = Http::timeout(10)->get(self::BASE . '/' . $endpoint);
 
             if ($res->failed()) {
                 Log::warning("wc26 API error: {$endpoint}", ['status' => $res->status()]);
-                return [];
+                return Cache::get($staleCacheKey, []);
             }
 
-            return $res->json() ?? [];
-        });
+            $data = $res->json() ?? [];
+            Cache::put($cacheKey, $data, $ttl);
+            Cache::put($staleCacheKey, $data, 86400 * 7); // stale: 7 jours
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::warning("wc26 API timeout/error: {$endpoint}", ['error' => $e->getMessage()]);
+            return Cache::get($staleCacheKey, []);
+        }
     }
 
     // ──────────────────────────────────────────────────────────
@@ -61,7 +74,7 @@ class Wc2026ApiService
     // ──────────────────────────────────────────────────────────
     public function getLiveFixtures(): array
     {
-        // Force refresh court : 30s
+        // Force refresh court : 30s — oublier le cache pour avoir les scores frais
         Cache::forget('wc26api_games');
         $raw      = $this->get('games', 30);
         $stadiums = $this->getStadiumsMap();
