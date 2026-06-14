@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MatchOverride;
 use App\Services\Wc2026ApiService;
 use Illuminate\Http\JsonResponse;
 
@@ -10,10 +11,14 @@ class FixtureController extends Controller
 {
     public function __construct(private readonly Wc2026ApiService $api) {}
 
-    // GET /api/wc26/fixtures — tous les matchs
     public function index(): JsonResponse
     {
-        $fixtures = $this->api->getAllFixtures();
+        $fixtures  = $this->api->getAllFixtures();
+        $overrides = MatchOverride::all()->keyBy('fixture_id');
+
+        $fixtures = array_map(function ($f) use ($overrides) {
+            return $this->applyOverride($f, $overrides->get($f['id']));
+        }, $fixtures);
 
         return response()->json([
             'count'  => count($fixtures),
@@ -22,10 +27,12 @@ class FixtureController extends Controller
         ]);
     }
 
-    // GET /api/wc26/fixtures/live — matchs en cours
     public function live(): JsonResponse
     {
-        $live = $this->api->getLiveFixtures();
+        $live      = $this->api->getLiveFixtures();
+        $overrides = MatchOverride::all()->keyBy('fixture_id');
+
+        $live = array_map(fn($f) => $this->applyOverride($f, $overrides->get($f['id'])), $live);
 
         return response()->json([
             'count'      => count($live),
@@ -35,7 +42,6 @@ class FixtureController extends Controller
         ]);
     }
 
-    // GET /api/wc26/fixtures/{id} — détail d'un match avec events
     public function show(int $id): JsonResponse
     {
         $detail = $this->api->getMatchDetail($id);
@@ -44,6 +50,32 @@ class FixtureController extends Controller
             return response()->json(['error' => 'Match introuvable'], 404);
         }
 
+        $override = MatchOverride::where('fixture_id', $id)->first();
+        $detail   = $this->applyOverride($detail, $override);
+
         return response()->json(['data' => $detail]);
+    }
+
+    private function applyOverride(array $fixture, ?MatchOverride $override): array
+    {
+        if (!$override) return $fixture;
+
+        if ($override->home_score !== null) {
+            $fixture['score']['home'] = $override->home_score;
+            $fixture['score']['away'] = $override->away_score;
+        }
+        if ($override->status) {
+            $fixture['status'] = $override->status;
+            if ($override->status === 'FT') {
+                $fixture['is_live'] = false;
+            } elseif (in_array($override->status, ['1H','2H','ET','PEN'])) {
+                $fixture['is_live'] = true;
+            }
+        }
+        if ($override->notes) {
+            $fixture['notes'] = $override->notes;
+        }
+
+        return $fixture;
     }
 }

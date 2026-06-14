@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PlayerPhotoController;
 use App\Http\Controllers\Api\WeatherController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\MatchStreamController;
+use App\Http\Controllers\Api\MatchOverrideController;
 
 // Auth (public)
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -39,6 +40,12 @@ Route::prefix('wc26')->group(function () {
     Route::get('/streams/{id}',        [MatchStreamController::class, 'show']);
     Route::post('/streams/{id}',       [MatchStreamController::class, 'upsert'])->middleware('auth:sanctum');
     Route::delete('/streams/{id}',     [MatchStreamController::class, 'destroy'])->middleware('auth:sanctum');
+
+    // Match overrides CRUD (admin)
+    Route::get('/overrides',           [MatchOverrideController::class, 'index']);
+    Route::get('/overrides/{id}',      [MatchOverrideController::class, 'show']);
+    Route::post('/overrides/{id}',     [MatchOverrideController::class, 'upsert'])->middleware('auth:sanctum');
+    Route::delete('/overrides/{id}',   [MatchOverrideController::class, 'destroy'])->middleware('auth:sanctum');
     Route::get('/standings',       [StandingController::class, 'index']);
     Route::get('/squad/{code}',    [SquadController::class, 'show']);
     Route::get('/squads',          [SquadController::class, 'index']);

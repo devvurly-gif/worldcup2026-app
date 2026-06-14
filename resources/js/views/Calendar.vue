@@ -29,7 +29,7 @@
     </div>
 
     <!-- Groupé par date -->
-    <div v-for="(dayMatches, date) in groupedByDate" :key="date" class="mb-8">
+    <div v-for="[date, dayMatches] in groupedByDate" :key="date" class="mb-8">
       <div class="flex items-center gap-3 mb-3">
         <div class="badge badge-primary badge-outline font-bold capitalize">{{ formatDay(date) }}</div>
         <div class="flex-1 h-px bg-base-300"></div>
@@ -115,11 +115,19 @@ const filtered = computed(() => store.fixtures.filter(m => {
 
 const groupedByDate = computed(() => {
   const map = {}
-  filtered.value.forEach(m => {
-    if (!map[m.date]) map[m.date] = []
-    map[m.date].push(m)
+  const sorted = [...filtered.value].sort((a, b) => {
+    if (!a.date && !b.date) return 0
+    if (!a.date) return 1
+    if (!b.date) return -1
+    return a.date.localeCompare(b.date) || (a.time || '').localeCompare(b.time || '')
   })
-  return map
+  sorted.forEach(m => {
+    const key = m.date ?? 'TBD'
+    if (!map[key]) map[key] = []
+    map[key].push(m)
+  })
+  // Retourner un tableau trié pour garantir l'ordre d'affichage
+  return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
 })
 
 function formatDay(d) {
