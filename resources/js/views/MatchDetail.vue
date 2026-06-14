@@ -223,11 +223,17 @@ const activeTab  = ref('Événements')
 const playerRef  = ref(null)
 const streamUrl  = ref('')
 
-// Stream URLs par match (configurable via admin)
-const STREAM_URLS = {}
-
-// Vérifie si l'utilisateur est admin (token en localStorage)
 const isAdmin = computed(() => !!localStorage.getItem('auth_token'))
+
+async function loadStream(fixtureId) {
+  try {
+    const res = await fetch(`/api/wc26/streams/${fixtureId}`)
+    const d   = await res.json()
+    streamUrl.value = d.stream_url ?? ''
+  } catch {
+    streamUrl.value = ''
+  }
+}
 
 // Live chrono
 const displayElapsed    = ref(0)
@@ -266,8 +272,8 @@ async function load(id, silent = false) {
       }
       events.value = d.events ?? []
 
-      // Stream URL pour ce match
-      streamUrl.value = STREAM_URLS[d.id] ?? localStorage.getItem(`stream_${d.id}`) ?? ''
+      // Charger stream URL depuis l'API
+      loadStream(d.id)
 
       // Init live chrono
       if (d.is_live && d.elapsed) {

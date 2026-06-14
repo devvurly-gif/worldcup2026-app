@@ -161,6 +161,7 @@ import { flagImg } from '@/utils/flag'
 
 const PAGE_SIZE = 20
 const fixtures     = ref([])
+const streams      = ref({}) // { fixtureId: streamUrl }
 const loading      = ref(false)
 const search       = ref('')
 const statusFilter = ref('')
@@ -187,30 +188,47 @@ const paginated  = computed(() => filtered.value.slice((page.value-1)*PAGE_SIZE,
 watch([search, statusFilter], () => page.value = 1)
 
 function getStream(id) {
-  return localStorage.getItem(`stream_${id}`) || ''
+  return streams.value[id] || ''
 }
 
-function openModal(m) {
+async function openModal(m) {
   form.value = {
     ...m,
     homeScore: m.homeScore ?? 0,
     awayScore: m.awayScore ?? 0,
     status: m.homeScore != null ? 'finished' : 'upcoming',
-    streamUrl: getStream(m.id),
+    streamUrl: '',
   }
+  // Charger stream URL depuis l'API
+  try {
+    const res = await fetch(`/api/wc26/streams/${m.id}`)
+    const d   = await res.json()
+    form.value.streamUrl = d.stream_url ?? ''
+  } catch {}
   modal.value = true
 }
 
-function saveScore() {
+async function saveScore() {
   const idx = fixtures.value.findIndex(m => m.id === form.value.id)
-  if (idx >= 0) {
-    fixtures.value[idx] = { ...form.value }
-  }
-  // Persist stream URL in localStorage
-  if (form.value.streamUrl) {
-    localStorage.setItem(`stream_${form.value.id}`, form.value.streamUrl)
-  } else {
-    localStorage.removeItem(`stream_${form.value.id}`)
+  if (idx >= 0) fixtures.value[idx] = { ...form.value }
+
+  // Sauvegarder stream URL via API
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    if (form.value.streamUrl) {
+      await fetch(`/api/wc26/streams/${form.value.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ stream_url: form.value.streamUrl, is_active: true }),
+      }).catch(() => {})
+      streams.value[form.value.id] = form.value.streamUrl
+    } else {
+      await fetch(`/api/wc26/streams/${form.value.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      }).catch(() => {})
+      delete streams.value[form.value.id]
+    }
   }
   modal.value = false
 }
@@ -224,5 +242,13 @@ async function loadFixtures() {
   loading.value = false
 }
 
-onMounted(loadFixtures)
+async function loadStreams() {
+  try {
+    const res = await fetch('/api/wc26/streams')
+    const d   = await res.json()
+    streams.value = Object.fromEntries((d.data ?? []).map(s => [s.fixture_id, s.stream_url]))
+  } catch {}
+}
+
+onMounted(() => { loadFixtures(); loadStreams() })
 </script>

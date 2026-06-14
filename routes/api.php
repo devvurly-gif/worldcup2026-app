@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\StandingController;
 use App\Http\Controllers\Api\PlayerPhotoController;
 use App\Http\Controllers\Api\WeatherController;
 use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\Api\MatchStreamController;
 
 // Auth (public)
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -32,6 +33,12 @@ Route::prefix('wc26')->group(function () {
     Route::get('/fixtures',        [FixtureController::class, 'index']);
     Route::get('/fixtures/live',   [FixtureController::class, 'live']);
     Route::get('/fixtures/{id}',   [FixtureController::class, 'show']);
+
+    // Streams (lecture publique, écriture admin)
+    Route::get('/streams',             [MatchStreamController::class, 'index']);
+    Route::get('/streams/{id}',        [MatchStreamController::class, 'show']);
+    Route::post('/streams/{id}',       [MatchStreamController::class, 'upsert'])->middleware('auth:sanctum');
+    Route::delete('/streams/{id}',     [MatchStreamController::class, 'destroy'])->middleware('auth:sanctum');
     Route::get('/standings',       [StandingController::class, 'index']);
     Route::get('/squad/{code}',    [SquadController::class, 'show']);
     Route::get('/squads',          [SquadController::class, 'index']);
