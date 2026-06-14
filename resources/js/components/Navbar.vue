@@ -53,8 +53,11 @@
             <i class="fas fa-rotate-right text-xs" :class="store.status.type==='loading' ? 'animate-spin' : ''"></i>
           </button>
           <!-- Theme toggle -->
-          <button @click="toggleTheme" class="btn btn-ghost btn-xs btn-square" :title="isDark ? 'Mode clair' : 'Mode sombre'">
-            <i class="fas text-xs" :class="isDark ? 'fa-sun' : 'fa-moon'"></i>
+          <button @click="toggleTheme"
+                  class="btn btn-sm btn-outline border-base-content/20 gap-1.5 text-base-content hover:bg-base-300"
+                  :title="isDark ? 'Mode clair' : 'Mode sombre'">
+            <span class="text-base leading-none">{{ isDark ? '☀️' : '🌙' }}</span>
+            <span class="text-xs font-semibold hidden sm:inline">{{ isDark ? 'Clair' : 'Sombre' }}</span>
           </button>
           <div v-if="store.liveCount > 0" class="badge badge-error gap-1 animate-pulse font-black text-xs">
             🔴 {{ store.liveCount }} LIVE
@@ -90,8 +93,7 @@ const store = useAppStore()
 const isDark = ref(localStorage.getItem('theme') !== 'light')
 
 function applyTheme(dark) {
-  const theme = dark ? 'wc2026' : 'wc2026-light'
-  document.documentElement.setAttribute('data-theme', theme)
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
   localStorage.setItem('theme', dark ? 'dark' : 'light')
 }
 

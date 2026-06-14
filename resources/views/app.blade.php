@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr" prefix="og: https://ogp.me/ns#" data-theme="wc2026">
+<html lang="fr" prefix="og: https://ogp.me/ns#" data-theme="dark">
 <script>
   (function(){
     var t = localStorage.getItem('theme');
-    document.documentElement.setAttribute('data-theme', t === 'light' ? 'wc2026-light' : 'wc2026');
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
   })();
 </script>
 <head>
