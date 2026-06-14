@@ -10,6 +10,12 @@
       <i class="fas fa-arrow-left mr-2"></i>Retour
     </button>
 
+    <!-- Live Stream Player -->
+    <LivePlayer v-if="match.isLive || streamUrl"
+                :stream-url="streamUrl"
+                :is-admin="isAdmin"
+                ref="playerRef" />
+
     <!-- Header match -->
     <div class="card overflow-hidden">
       <div class="hero-bg p-6">
@@ -202,17 +208,26 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api, getTeam } from '@/services/api'
 import TeamLink from '@/components/TeamLink.vue'
+import LivePlayer from '@/components/LivePlayer.vue'
 import { useAppStore } from '@/stores/app'
 import { flagImg } from '@/utils/flag'
 
 const route = useRoute()
 const store = useAppStore()
 
-const match   = ref(null)
-const events  = ref([])
-const weather = ref(null)
-const loading = ref(true)
-const activeTab = ref('Événements')
+const match      = ref(null)
+const events     = ref([])
+const weather    = ref(null)
+const loading    = ref(true)
+const activeTab  = ref('Événements')
+const playerRef  = ref(null)
+const streamUrl  = ref('')
+
+// Stream URLs par match (configurable via admin)
+const STREAM_URLS = {}
+
+// Vérifie si l'utilisateur est admin (token en localStorage)
+const isAdmin = computed(() => !!localStorage.getItem('auth_token'))
 
 // Live chrono
 const displayElapsed    = ref(0)
@@ -250,6 +265,9 @@ async function load(id, silent = false) {
         scoreAway: d.score?.away,
       }
       events.value = d.events ?? []
+
+      // Stream URL pour ce match
+      streamUrl.value = STREAM_URLS[d.id] ?? localStorage.getItem(`stream_${d.id}`) ?? ''
 
       // Init live chrono
       if (d.is_live && d.elapsed) {
